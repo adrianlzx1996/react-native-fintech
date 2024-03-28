@@ -1,8 +1,10 @@
 import Colors from "@/constants/Colors";
 import { defaultStyles } from "@/constants/Styles";
+import { isClerkAPIResponseError, useSignIn } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native"
+import { Alert, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 enum LoginType {
 	Phone,
@@ -12,12 +14,67 @@ enum LoginType {
 }
 
 const Page = () => {
-	const [countryCode, setCountryCode] = useState('+60');
+	const router = useRouter();
+	const { signIn } = useSignIn();
+	const [countryCode, setCountryCode] = useState('60');
 	const [phone, setPhone] = useState('');
+	const [email, setEmail] = useState('');
 	const keyboardVerticalOffset = Platform.OS === 'ios' ? 90 : 0;
 
 	const onLogin = async (type: LoginType) => {
-		if (type === LoginType.Phone) { }
+		// if (type === LoginType.Phone) {
+		// 	try {
+		// 		const fullPhoneNumber = `${countryCode}${phone}`;
+		// 		const { supportedFirstFactors } = await signIn!.create({
+		// 			identifier: fullPhoneNumber
+		// 		});
+		// 		const firstPhoneFactor: any = supportedFirstFactors.find((factor: any) => {
+		// 			return factor.strategy === 'phone_code';
+		// 		})
+
+		// 		const { phoneNumberId } = firstPhoneFactor;
+
+		// 		await signIn!.prepareFirstFactor({
+		// 			strategy: 'phone_code',
+		// 			phoneNumberId
+		// 		})
+
+		// 		router.push({ pathname: '/verify/[phone]', params: { phone: fullPhoneNumber, signin: 'true' } });
+		// 	} catch (error) {
+		// 		console.error('Error login:', error);
+		// 		if (isClerkAPIResponseError(error)) {
+		// 			if (error.errors[0].code === 'form_identifier_not_found') {
+		// 				Alert.alert('Error', error.errors[0].message);
+		// 			}
+		// 		}
+		// 	}
+		// }
+		if (type === LoginType.Email) {
+			try {
+				const { supportedFirstFactors } = await signIn!.create({
+					identifier: email
+				});
+				const firstPhoneFactor: any = supportedFirstFactors.find((factor: any) => {
+					return factor.strategy === 'email_code';
+				})
+
+				const { emailAddressId } = firstPhoneFactor;
+
+				await signIn!.prepareFirstFactor({
+					strategy: 'email_code',
+					emailAddressId
+				})
+
+				router.push({ pathname: '/verify/[email]', params: { email, signin: 'true' } });
+			} catch (error) {
+				console.error('Error login:', error);
+				if (isClerkAPIResponseError(error)) {
+					if (error.errors[0].code === 'form_identifier_not_found') {
+						Alert.alert('Error', error.errors[0].message);
+					}
+				}
+			}
+		}
 	}
 
 	return (
@@ -29,7 +86,7 @@ const Page = () => {
 				</Text>
 
 				<View style={styles.inputContainer}>
-					<TextInput
+					{/* <TextInput
 						style={styles.input}
 						placeholder="Country Code"
 						placeholderTextColor={Colors.gray}
@@ -43,6 +100,14 @@ const Page = () => {
 						keyboardType="numeric"
 						value={phone}
 						onChangeText={setPhone}
+					/> */}
+					<TextInput
+						style={[styles.input, { flex: 1 }]}
+						placeholder="Email address"
+						placeholderTextColor={Colors.gray}
+						keyboardType="email-address"
+						value={email}
+						onChangeText={setEmail}
 					/>
 				</View>
 
@@ -50,7 +115,7 @@ const Page = () => {
 
 				<TouchableOpacity
 					onPress={() => onLogin(LoginType.Phone)}
-					style={[defaultStyles.pillButton, { marginBottom: 20 }, phone !== '' ? styles.enabled : styles.disabled]}
+					style={[defaultStyles.pillButton, { marginBottom: 20 }, phone !== '' || email !== '' ? styles.enabled : styles.disabled]}
 				>
 					<Text style={defaultStyles.buttonText}>Continue</Text>
 				</TouchableOpacity>
