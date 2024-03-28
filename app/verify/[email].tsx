@@ -13,7 +13,7 @@ import {
 const CELL_COUNT = 6;
 
 const Page = () => {
-	const { phone, signin } = useLocalSearchParams<{ phone: string, signin?: string }>();
+	const { email, signin } = useLocalSearchParams<{ email: string, signin?: string }>();
 	const [code, setCode] = useState('');
 	const { signIn } = useSignIn();
 	const { signUp, setActive } = useSignUp();
@@ -38,7 +38,7 @@ const Page = () => {
 
 	const verifyCode = async () => {
 		try {
-			await signUp!.attemptPhoneNumberVerification({
+			await signUp!.attemptEmailAddressVerification({
 				code
 			});
 
@@ -53,7 +53,7 @@ const Page = () => {
 	const verifySignIn = async () => {
 		try {
 			await signIn!.attemptFirstFactor({
-				strategy: 'phone_code',
+				strategy: 'email_code',
 				code
 			});
 
@@ -70,7 +70,7 @@ const Page = () => {
 		<View style={defaultStyles.container}>
 			<Text style={defaultStyles.header}>6-digit code</Text>
 			<Text style={defaultStyles.descriptionText}>
-				Code sent to {phone} unless you already have an account
+				Code sent to {email} unless you already have an account
 			</Text>
 
 			<CodeField
