@@ -1,26 +1,59 @@
 import Colors from "@/constants/Colors";
 import { defaultStyles } from "@/constants/Styles";
-import { Link } from "expo-router";
+import { useSignUp } from "@clerk/clerk-expo";
+import { Link, useRouter } from "expo-router";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native"
 
 const Page = () => {
-	const [countryCode, setCountryCode] = useState('+60');
+	const [countryCode, setCountryCode] = useState('60');
 	const [phone, setPhone] = useState('');
+	const [email, setEmail] = useState('');
 	const keyboardVerticalOffset = Platform.OS === 'ios' ? 90 : 0;
+	const router = useRouter();
+	const { signUp } = useSignUp();
 
-	const onRegister = async () => { }
+	const onRegister = async () => {
+		// if (phone !== '') {
+		// 	const fullPhoneNumber = `${countryCode}${phone}`;
+
+		// 	try {
+		// 		await signUp!.create({
+		// 			phoneNumber: fullPhoneNumber
+		// 		})
+		// 		signUp!.preparePhoneNumberVerification();
+
+		// 		router.push({ pathname: '/verify/[phone]', params: { phone: fullPhoneNumber } });
+		// 	} catch (error) {
+		// 		console.error('Error register:', error);
+		// 	}
+		// }
+
+		if (email !== '') {
+			try {
+				await signUp!.create({
+					emailAddress: email
+				})
+				signUp!.prepareEmailAddressVerification();
+
+				router.push({ pathname: '/verify/[email]', params: { email } });
+			} catch (error) {
+				console.error('Error register:', error);
+				console.log(error)
+			}
+		}
+	}
 
 	return (
 		<KeyboardAvoidingView style={{ flex: 1 }} behavior="padding" keyboardVerticalOffset={keyboardVerticalOffset}>
 			<View style={defaultStyles.container}>
 				<Text style={defaultStyles.header}>Let's get started!</Text>
 				<Text style={defaultStyles.descriptionText}>
-					Enter your phone number. We will send you a confirmation code there
+					Enter your email address. We will send you a confirmation code there
 				</Text>
 
 				<View style={styles.inputContainer}>
-					<TextInput
+					{/* <TextInput
 						style={styles.input}
 						placeholder="Country Code"
 						placeholderTextColor={Colors.gray}
@@ -34,6 +67,14 @@ const Page = () => {
 						keyboardType="numeric"
 						value={phone}
 						onChangeText={setPhone}
+					/> */}
+					<TextInput
+						style={[styles.input, { flex: 1 }]}
+						placeholder="Email Address"
+						placeholderTextColor={Colors.gray}
+						keyboardType="email-address"
+						value={email}
+						onChangeText={setEmail}
 					/>
 				</View>
 
@@ -47,7 +88,7 @@ const Page = () => {
 
 				<TouchableOpacity
 					onPress={onRegister}
-					style={[defaultStyles.pillButton, { marginTop: 20 }, phone !== '' ? styles.enabled : styles.disabled]}
+					style={[defaultStyles.pillButton, { marginTop: 20 }, phone !== '' || email !== '' ? styles.enabled : styles.disabled]}
 				>
 					<Text style={defaultStyles.buttonText}>Register</Text>
 				</TouchableOpacity>
