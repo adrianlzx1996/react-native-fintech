@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 
 import { useFonts } from 'expo-font';
-import { Link, Stack, useRouter } from 'expo-router';
+import { Link, Slot, Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -51,6 +51,7 @@ const InitialLayout = () => {
 	});
 	const router = useRouter();
 	const { isLoaded, isSignedIn } = useAuth();
+	const segments = useSegments();
 
 	// Expo Router uses Error Boundaries to catch errors in the navigation tree.
 	useEffect(() => {
@@ -64,11 +65,19 @@ const InitialLayout = () => {
 	}, [loaded]);
 
 	useEffect(() => {
-		console.log({ isSignedIn });
-	}, [isSignedIn])
+		if (!isLoaded) return;
 
-	if (!loaded) {
-		return null;
+		const inAuthGroup = segments[0] === '(authed)';
+
+		if (isSignedIn && !inAuthGroup) {
+			router.replace('/home');
+		} else if (!isSignedIn) {
+			router.replace('/');
+		}
+	}, [isSignedIn, segments, isLoaded])
+
+	if (!loaded || !isLoaded) {
+		return <Slot />;
 	}
 
 	return <Stack>
@@ -140,6 +149,9 @@ const InitialLayout = () => {
 		/>
 
 		<Stack.Screen name="help" options={{ presentation: 'modal', title: "Help" }} />
+
+		<Stack.Screen name="(authed)/(tab)" options={{ headerShown: false }} />
+
 	</Stack>;
 }
 
