@@ -53,7 +53,7 @@ const Page = () => {
 							</View>
 							<View style={{ flex: 1 }}>
 								<Text style={{ fontWeight: '400' }}>{transaction.title}</Text>
-								<Text style={{ color: Colors.gray, fontSize: 12 }}>{transaction.date}</Text>
+								<Text style={{ color: Colors.gray, fontSize: 12 }}>{transaction.date.toUTCString()}</Text>
 							</View>
 							<Text>{transaction.amount}$</Text>
 						</View>
