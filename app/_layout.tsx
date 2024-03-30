@@ -74,7 +74,7 @@ const InitialLayout = () => {
 		} else if (!isSignedIn) {
 			router.replace('/');
 		}
-	}, [isSignedIn, segments, isLoaded])
+	}, [isSignedIn])
 
 	if (!loaded || !isLoaded) {
 		return <Slot />;
