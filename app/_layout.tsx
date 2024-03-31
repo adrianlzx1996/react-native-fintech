@@ -8,7 +8,7 @@ import { Link, Slot, Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { TouchableOpacity } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as SecureStore from 'expo-secure-store';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -154,6 +154,29 @@ const InitialLayout = () => {
 		<Stack.Screen name="help" options={{ presentation: 'modal', title: "Help" }} />
 
 		<Stack.Screen name="(authed)/(tab)" options={{ headerShown: false }} />
+		<Stack.Screen
+			name="(authed)/crypto/[id]"
+			options={{
+				title: '',
+				headerLargeTitle: true,
+				headerTransparent: true,
+				headerLeft: () => (
+					<TouchableOpacity onPress={router.back}>
+						<Ionicons name="arrow-back" size={32} color={Colors.dark} />
+					</TouchableOpacity>
+				),
+				headerRight: () => (
+					<View style={{ flexDirection: 'row', gap: 12 }}>
+						<TouchableOpacity>
+							<Ionicons name="notifications-outline" color={Colors.dark} size={32} />
+						</TouchableOpacity>
+						<TouchableOpacity>
+							<Ionicons name="star-outline" color={Colors.dark} size={32} />
+						</TouchableOpacity>
+					</View>
+				)
+			}}
+		/>
 
 	</Stack>;
 }
