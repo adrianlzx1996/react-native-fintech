@@ -49,14 +49,14 @@ const Page = () => {
 						<Text style={{ padding: 14, color: Colors.gray }}>No transaction yet...</Text>
 					)
 					:
-					transactions.map(transaction => (
+					transactions?.map(transaction => (
 						<View key={transaction.id} style={styles.transaction}>
 							<View style={styles.circle}>
 								<Ionicons name={transaction.amount > 0 ? "add" : "remove"} size={24} color={Colors.primary} />
 							</View>
 							<View style={{ flex: 1 }}>
 								<Text style={{ fontWeight: '400' }}>{transaction.title}</Text>
-								<Text style={{ color: Colors.gray, fontSize: 12 }}>{transaction.date.toUTCString()}</Text>
+								<Text style={{ color: Colors.gray, fontSize: 12 }}>{new Date(transaction?.date)?.toUTCString()}</Text>
 							</View>
 							<Text>{transaction.amount}$</Text>
 						</View>
