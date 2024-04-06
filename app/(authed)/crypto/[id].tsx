@@ -1,17 +1,45 @@
 import { Stack, useLocalSearchParams } from "expo-router";
-import { Image, ScrollView, SectionList, StyleSheet, Text, TouchableOpacity, View } from "react-native"
+import { Image, ScrollView, SectionList, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native"
 import { useHeaderHeight } from "@react-navigation/elements"
 import { defaultStyles } from "@/constants/Styles";
 import Colors from "@/constants/Colors";
 import { useQuery } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { CartesianChart, Line, useChartPressState } from "victory-native";
+import * as Haptics from "expo-haptics";
+import { Ticker } from "@/interfaces/crypto";
+import { Circle, useFont } from "@shopify/react-native-skia";
+import { format } from "@formkit/tempo"
+import Animated, { SharedValue, useAnimatedProps } from "react-native-reanimated";
+
 const categories = ["Overview", "News", "Orders", "Transactions"]
+
+const INIT_STATE = { x: 0, y: { price: 0 } } as const;
+
+Animated.addWhitelistedNativeProps({ text: true, });
+const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
+
+function ToolTip({ x, y }: { x: SharedValue<number>; y: SharedValue<number> }) {
+	return <Circle cx={x} cy={y} r={8} color={Colors.primary} />;
+}
 
 const Page = () => {
 	const headerHeight = useHeaderHeight();
 	const { id } = useLocalSearchParams();
 	const [activeIndex, setActiveIndex] = useState(0);
+	const font = useFont(require('@/assets/fonts/SpaceMono-Regular.ttf'), 12);
+
+	// 👇 create multiple press states
+	const { state, isActive } = useChartPressState(INIT_STATE);
+
+	useEffect(() => {
+		if (isActive) {
+			Haptics.selectionAsync()
+		}
+
+	}, [isActive])
+
 
 	const { data } = useQuery({
 		queryKey: ['info', id],
@@ -21,6 +49,26 @@ const Page = () => {
 			return info[+id];
 		},
 	});
+
+	const { data: tickers } = useQuery({
+		queryKey: ['tickers', id],
+		queryFn: async (): Promise<Ticker[]> => await fetch(`/api/ticker`).then(res => res.json()),
+	});
+
+	const animatedText = useAnimatedProps(() => {
+		return {
+			text: `$${state.y.price.value.value.toFixed(2)}`,
+			defaultValue: ''
+		}
+	})
+
+	const animatedDateText = useAnimatedProps(() => {
+		const date = new Date(state.x.value.value)
+		return {
+			text: date.toLocaleDateString(),
+			defaultValue: ''
+		}
+	})
 
 	return (
 		<>
@@ -63,8 +111,42 @@ const Page = () => {
 				renderItem={({ item }) => (
 					<>
 						{/* Chart */}
-						<View style={{ height: 500, backgroundColor: "green" }}>
-
+						<View style={[defaultStyles.block, { height: 500 }]}>
+							{tickers !== undefined
+								?
+								<>
+									{!isActive
+										? <View>
+											<Text style={{ fontSize: 32, fontWeight: "bold", color: Colors.dark }}>${tickers[tickers.length - 1].price.toFixed(2)}</Text>
+											<Text style={{ fontSize: 16, color: Colors.gray }}>Today</Text>
+										</View>
+										: <View>
+											<AnimatedTextInput editable={false} underlineColorAndroid={'transparent'} style={{ fontSize: 32, fontWeight: "bold", color: Colors.dark }} animatedProps={animatedText} />
+											<AnimatedTextInput editable={false} underlineColorAndroid={'transparent'} style={{ fontSize: 16, fontWeight: "bold", color: Colors.dark }} animatedProps={animatedDateText} />
+										</View>}
+									<CartesianChart
+										chartPressState={state}
+										axisOptions={{
+											font,
+											tickCount: 4,
+											labelOffset: { x: -2, y: 2 },
+											labelColor: Colors.gray,
+											formatYLabel: v => `$${v}`,
+											formatXLabel: ms => format(new Date(ms), "MM/YY")
+										}}
+										data={tickers!}
+										xKey="timestamp"
+										yKeys={["price"]}
+									>
+										{({ points }) => (
+											<>
+												<Line points={points.price} color={Colors.primary} strokeWidth={3} />
+												{isActive && <ToolTip x={state.x.position} y={state.y.price.position} />}
+											</>
+										)}
+									</CartesianChart>
+								</>
+								: null}
 						</View>
 						<View style={[defaultStyles.block, { marginTop: 20 }]}>
 							<Text style={styles.subtitle}>Overview</Text>
